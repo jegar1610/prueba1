@@ -178,7 +178,6 @@
             👆 <strong>1 Toque:</strong> Modifica la carta | ⏱️ <strong>Mantén presionado:</strong> Borra por completo
         </div>
 
-        <!-- SECCIÓN: COLECCIÓN PRINCIPAL -->
         <div id="view-collection" class="view-section active-view">
             <div class="dashboard">
                 <div class="progress-container">
@@ -205,7 +204,6 @@
             <div class="cards-grid" id="cards-grid"></div>
         </div>
 
-        <!-- SECCIÓN: INTERCAMBIOS -->
         <div id="view-trade" class="view-section">
             <div class="panel-box">
                 <div class="panel-title">🔁 Mi Lista de Repetidas</div>
@@ -221,7 +219,6 @@
             </div>
         </div>
 
-        <!-- SECCIÓN: AJUSTES -->
         <div id="view-settings" class="view-section">
             <div class="panel-box" style="border-left: 5px solid var(--details-yellow);">
                 <div class="panel-title">⚡ Modo Revisión Rápida</div>
@@ -318,21 +315,18 @@
             calculateDays();
         });
 
-        // 🎀 BOTÓN DE RESCATE AUTOMÁTICO INTEGRADO AQUÍ
         function loadSavedData() {
             const savedDataNew = localStorage.getItem('hk_ultra_album_v10');
             const savedDataOld = localStorage.getItem('hk_fast_cards_v4') || localStorage.getItem('hk_photo_album_v6') || localStorage.getItem('hk_bow_album_v9');
             const savedDate = localStorage.getItem('hk_ultra_date_v10') || localStorage.getItem('hk_photo_date_v5') || localStorage.getItem('hk_bow_date_v9');
             
+            // Forzar primero la creación de la base de datos limpia de 227 cartas
+            generateInitialDatabase();
+
             if (savedDataNew) {
-                // Si ya existe en la v10, cargamos normal
                 collectionData = JSON.parse(savedDataNew);
             } else if (savedDataOld) {
-                // 🚀 PARCHE DE MIGRACIÓN: Si no hay v10 pero sí hay datos antiguos, los rescatamos
                 let oldProgress = JSON.parse(savedDataOld);
-                generateInitialDatabase(); // Crea la base limpia de 227 cartas
-                
-                // Mapeamos lo que el usuario ya tenía marcado al nuevo formato
                 oldProgress.forEach(oldCard => {
                     let newIdx = collectionData.findIndex(c => c.name === oldCard.name);
                     if(newIdx !== -1) {
@@ -340,11 +334,9 @@
                         collectionData[newIdx].copies = oldCard.copies || 0;
                     }
                 });
-                saveToStorage(); // Guardamos inmediatamente en la v10 para consolidar
-                console.log("¡Progreso de usuario rescatado con éxito!");
+                saveToStorage();
             } else {
-                // Si es un usuario completamente nuevo sin historial
-                generateInitialDatabase();
+                saveToStorage();
             }
             
             if (savedDate) { startDate = savedDate; } else { startDate = new Date().toISOString(); localStorage.setItem('hk_ultra_date_v10', startDate); }
@@ -554,7 +546,7 @@
             if (filteredMissing.length === 0) { 
                 txtMiss.value = `¡Genial! No te falta ninguna carta de este bloque [${labelContext}]. 🎉`; 
             } else {
-                let outMiss = `¡Hola! Estas son las cartas que me FALTAN de la [${labelContext}] para completar mi álbum de Hello Kitty:\n\n";
+                let outMiss = `¡Hola! Estas son las cartas que me FALTAN de la [${labelContext}] para completar mi álbum de Hello Kitty:\n\n`;
                 filteredMissing.forEach(c => { outMiss += `• Carta #${c.name} [${c.type}]\n`; });
                 txtMiss.value = outMiss;
             }
@@ -600,7 +592,7 @@
                 localStorage.removeItem('hk_ultra_album_v10');
                 startDate = new Date().toISOString(); localStorage.setItem('hk_ultra_date_v10', startDate);
                 recentChanges = []; logRecentChange("");
-                generateInitialDatabase(); buildFilterButtons(); renderGrid(); updateDashboard(); calculateDays();
+                generateInitialDatabase(); saveToStorage(); buildFilterButtons(); renderGrid(); updateDashboard(); calculateDays();
                 alert("Álbum limpio.");
             }
         }
