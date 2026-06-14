@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hello Kitty Collector Edition v8</title>
+    
+    <meta name="theme-color" content="#e60012">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Kitty">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23e60012' rx='20'/><text y='70' x='15' font-size='65'>🎀</text></svg>">
+
+    <style>
+        :root {
+            --bg-color: #e3f2fd; 
+            --container-bg: #ffffff;
+            --text-color: #1a1a1a;
+            --text-muted: #666666;
+            --primary: #e60012; 
+            --accent: #005cb2;  
+            --accent-light: #e1f5fe;
+            --details-yellow: #ffcc00; 
+            
+            --card-gray: #ffffff;
+            --card-gray-border: #cbd5e1;
+            --card-green: #c6f6d5; 
+            --card-green-border: #48bb78;
+            --card-yellow: #feebc8; 
+            --card-yellow-border: #ed8936;
+            
+            --border-radius: 20px;
+            --shadow: 0 8px 24px rgba(0, 92, 178, 0.12);
+            --transition: all 0.2s ease;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #0d1b2a;
+            --container-bg: #1b263b;
+            --text-color: #f5f5f5;
+            --text-muted: #8d99ae;
+            --primary: #ff3344;
+            --accent: #415a77;
+            
+            --card-gray: #1e293b;
+            --card-gray-border: #475569;
+            --card-green: #1e3a8a;
+            --card-green-border: #3b82f6;
+            --card-yellow: #7c2d12;
+            --card-yellow-border: #f97316;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none !important; 
+            -webkit-user-select: none !important;
+            user-select: none !important;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: var(--transition);
+            padding-bottom: 90px;
+            font-size: 14px;
+        }
+
+        .app-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+
+        header { text-align: center; padding: 20px 0 10px 0; }
+        h1 { font-size: 24pt; color: var(--primary); text-shadow: 2px 2px 0px rgba(255, 255, 255, 0.8); font-weight: 800; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        h1::before, h1::after { content: '🎀'; font-size: 16pt; }
+        .header-meta { font-size: 11px; color: var(--accent); font-weight: bold; background: var(--container-bg); padding: 4px 14px; border-radius: 20px; display: inline-block; box-shadow: var(--shadow); margin-top: 5px; border: 1px solid var(--accent-light); }
+        .tip-banner { background: var(--container-bg); color: var(--text-muted); font-size: 11px; text-align: center; padding: 8px; border-radius: 12px; margin-bottom: 15px; box-shadow: var(--shadow); border-left: 4px solid var(--details-yellow); }
+        .dashboard { background: var(--container-bg); border-radius: var(--border-radius); padding: 15px; box-shadow: var(--shadow); margin-bottom: 15px; border-top: 5px solid var(--primary); }
+        
+        .progress-container { background: #e2e8f0; border-radius: 10px; height: 18px; overflow: hidden; position: relative; margin-bottom: 15px; }
+        [data-theme="dark"] .progress-container { background: #475569; }
+        .progress-bar { background: linear-gradient(90deg, var(--details-yellow), var(--primary)); height: 100%; width: 0%; transition: width 0.3s ease; }
+        .progress-text { position: absolute; width: 100%; text-align: center; top: 0; left: 0; font-size: 10px; font-weight: bold; color: #000; line-height: 18px; }
+        [data-theme="dark"] .progress-text { color: #fff; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .stat-box { text-align: center; padding: 8px; background: var(--bg-color); border-radius: 12px; }
+        .stat-val { font-size: 14px; font-weight: bold; color: var(--accent); }
+        .stat-lbl { font-size: 9px; color: var(--text-muted); text-transform: uppercase; margin-top: 2px; }
+
+        .search-filter-box { background: var(--container-bg); border-radius: var(--border-radius); padding: 12px; box-shadow: var(--shadow); margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .search-input { width: 100%; padding: 12px 16px; border: 2px solid var(--accent); border-radius: 30px; background: var(--bg-color); color: var(--text-color); font-size: 15px; outline: none; -webkit-user-select: text !important; user-select: text !important; }
+        
+        .filter-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
+        .filter-scroll::-webkit-scrollbar { display: none; }
+        .filter-btn { white-space: nowrap; padding: 8px 16px; border: none; border-radius: 20px; background: var(--bg-color); color: var(--text-color); font-weight: 600; font-size: 11px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .filter-btn.active { background: var(--accent); color: #ffffff; }
+
+        /* Cuadrícula en filas de 3 */
+        .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+
+        .card {
+            aspect-ratio: 1 / 1; 
+            background: var(--card-gray); 
+            border: 2px solid var(--card-gray-border);
+            border-radius: 16px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            position: relative; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.03); 
+            padding: 8px; text-align: center; transition: var(--transition); cursor: pointer;
+        }
+        .card:active { transform: scale(0.95); }
+        
+        /* Cambios de color limpios para los estados */
+        .card.obtained { background-color: var(--card-green); border-color: var(--card-green-border); }
+        .card.repeated { background-color: var(--card-yellow); border-color: var(--card-yellow-border); }
+
+        /* Contenedor central con el nombre de la colección */
+        .card-collection-title {
+            font-size: 8px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-top: 4px;
+            width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        [data-theme="dark"] .card.obtained .card-collection-title,
+        [data-theme="dark"] .card.repeated .card-collection-title { color: #e2e8f0; }
+
+        .card-num-row { display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .card-num { font-size: 20px; font-weight: 900; color: var(--text-color); }
+        .card.obtained .card-num { color: #22543d; }
+        .card.repeated .card-num { color: #744210; }
+        [data-theme="dark"] .card.obtained .card-num { color: #38bdf8; }
+        [data-theme="dark"] .card.repeated .card-num { color: #fb923c; }
+
+        .card-rep-badge {
+            background: var(--primary); color: white; font-size: 10px; min-width: 18px; height: 18px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            padding: 0 3px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+
+        .view-section { display: none; }
+        .view-section.active-view { display: block; }
+        .panel-box { background: var(--container-bg); border-radius: var(--border-radius); padding: 18px; box-shadow: var(--shadow); margin-bottom: 15px; }
+        .panel-title { font-size: 16px; font-weight: bold; color: var(--primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .trade-textarea { width: 100%; height: 120px; border: 2px solid var(--accent); background: var(--bg-color); color: var(--text-color); border-radius: 12px; padding: 10px; font-family: monospace; resize: none; outline: none; margin-bottom: 12px; -webkit-user-select: text !important; user-select: text !important; }
+
+        .input-inline { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+        .input-inline input { width: 100%; padding: 10px 14px; border: 2px solid var(--accent); border-radius: 20px; background: var(--bg-color); color: var(--text-color); outline: none; -webkit-user-select: text !important; user-select: text !important; }
+
+        .btn-action { display: block; width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 30px; font-size: 14px; font-weight: bold; cursor: pointer; text-align: center; box-shadow: 0 4px 12px rgba(230, 0, 18, 0.15); margin-bottom: 10px; }
+        .btn-action:active { transform: scale(0.98); }
+        .btn-secondary { background: var(--accent); color: white; }
+        .btn-sm { padding: 10px 20px; width: 100%; border-radius: 20px; font-size: 12px; margin-top: 4px; }
+        .btn-danger { background: #cc0000; }
+        .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--bg-color); }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 70px; background: var(--container-bg); box-shadow: 0 -4px 16px rgba(0,0,0,0.08); display: flex; justify-content: space-around; align-items: center; z-index: 99; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); background: none; border: none; font-size: 11px; font-weight: 600; width: 25%; height: 100%; cursor: pointer; }
+        .nav-item.active { color: var(--primary); }
+        .nav-icon { font-size: 20px; margin-bottom: 2px; }
+
+        .celebration-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(255,255,255,0.9); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; }
+        .celebration-overlay.active { opacity: 1; pointer-events: auto; }
+        #file-input { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <header>
+            <h1>Hello Kitty</h1>
+            <div class="header-meta" id="days-counter">Cargando álbum...</div>
+        </header>
+
+        <div class="tip-banner">
+            👆 <strong>1 Toque:</strong> Agrega/Suma repetidas | ⏱️ <strong>Mantén presionado:</strong> Borra la carta
+        </div>
+
+        <!-- SECCIÓN: COLECCIÓN PRINCIPAL -->
+        <div id="view-collection" class="view-section active-view">
+            <div class="dashboard">
+                <div class="progress-container">
+                    <div class="progress-bar" id="progress-bar"></div>
+                    <div class="progress-text" id="progress-text">0%</div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-box"><div class="stat-val" id="stat-total">227</div><div class="stat-lbl">Total</div></div>
+                    <div class="stat-box"><div class="stat-val" id="stat-obtained">0</div><div class="stat-lbl">Tengo</div></div>
+                    <div class="stat-box"><div class="stat-val" id="stat-missing">227</div><div class="stat-lbl">Faltan</div></div>
+                    <div class="stat-box"><div class="stat-val" id="stat-repeated">0</div><div class="stat-lbl">Repetidas</div></div>
+                    <div class="stat-box"><div class="stat-val" id="stat-percent">0%</div><div class="stat-lbl">Progreso</div></div>
+                </div>
+            </div>
+
+            <div class="search-filter-box">
+                <input type="text" class="search-input" id="search-input" placeholder="🔍 Buscar por número o colección...">
+                <div class="filter-scroll" id="filter-container"></div>
+            </div>
+
+            <div class="cards-grid" id="cards-grid"></div>
+        </div>
+
+        <!-- SECCIÓN: INTERCAMBIOS -->
+        <div id="view-trade" class="view-section">
+            <div class="panel-box">
+                <div class="panel-title">🔁 Mi Lista de Repetidas</div>
+                <textarea class="trade-textarea" id="trade-text" readonly></textarea>
+                <button class="btn-action" onclick="copyTradeList()">📋 Copiar Lista para WhatsApp</button>
+            </div>
+
+            <div class="panel-box" style="border-top: 5px solid var(--accent);">
+                <div class="panel-title">🔍 Mi Lista de Faltantes</div>
+                <textarea class="trade-textarea" id="missing-text" readonly style="border-color: var(--accent);"></textarea>
+                <button class="btn-action btn-secondary" onclick="copyMissingList()">📋 Copiar Faltantes para WhatsApp</button>
+            </div>
+        </div>
+
+        <!-- SECCIÓN: AJUSTES -->
+        <div id="view-settings" class="view-section">
+            <div class="panel-box">
+                <div class="panel-title">➕ Agregar Cartas Extras Especiales</div>
+                <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">Añade estampas adicionales personalizadas que no vengan de base:</p>
+                <div class="input-inline">
+                    <input type="text" id="extra-card-name" placeholder="Ej: Especial Oro, Promocional...">
+                    <button class="btn-action btn-secondary btn-sm" onclick="addNewExtraCard()">Agregar Extra</button>
+                </div>
+            </div>
+
+            <div class="panel-box">
+                <div class="panel-title">⚙️ Preferencias</div>
+                <div class="setting-row">
+                    <span>Modo Oscuro</span>
+                    <label class="switch">
+                        <input type="checkbox" id="theme-toggle" onchange="toggleTheme()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="panel-box">
+                <div class="panel-title">📦 Respaldos</div>
+                <button class="btn-action btn-secondary" onclick="exportCollection()">📤 Guardar Copia (JSON)</button>
+                <button class="btn-action btn-secondary" onclick="triggerImport()">📥 Subir Copia (JSON)</button>
+                <input type="file" id="file-input" accept=".json" onchange="importCollection(event)">
+                <button class="btn-action btn-danger" style="margin-top: 20px;" onclick="resetCollection()">⚠️ Reiniciar Todo el Álbum</button>
+            </div>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="switchView('collection', this)"><div class="nav-icon">🎀</div><span>Colección</span></button>
+        <button class="nav-item" onclick="switchView('trade', this)"><div class="nav-icon">🔁</div><span>Intercambio</span></button>
+        <button class="nav-item" onclick="switchView('settings', this)"><div class="nav-icon">⚙️</div><span>Ajustes</span></button>
+    </nav>
+
+    <div class="celebration-overlay" id="celebration">
+        <div style="text-align: center;">
+            <h1 style="font-size: 32pt;">¡ÁLBUM COMPLETO! 🎉</h1>
+            <p style="font-size: 18px; margin-top: 15px; font-weight: bold; color: var(--primary);">✨ Completaste todas tus cartas registradas ✨</p>
+            <button class="btn-action" style="margin-top: 30px; max-width: 200px; margin-left: auto; margin-right: auto;" onclick="document.getElementById('celebration').classList.remove('active')">¡Súper! 🎀</button>
+        </div>
+    </div>
+
+    <script>
+        const BASE_TOTAL = 227; 
+        let collectionData = [];
+        let currentFilter = 'all';
+        let startDate = null;
+
+        const COLLECTIONS = [
+            { name: "HELLO KITTY", start: 1, end: 9 },
+            { name: "MY MELODY", start: 10, end: 18 },
+            { name: "KUROMI", start: 19, end: 27 },
+            { name: "BEST FRIENDS", start: 28, end: 36 },
+            { name: "ROOM TOUR", start: 37, end: 45 },
+            { name: "LET'S DANCE!", start: 46, end: 54 },
+            { name: "TRAVEL AND FUN", start: 55, end: 63 },
+            { name: "ROAD TRIP", start: 64, end: 72 },
+            { name: "AT THE SEASIDE", start: 73, end: 81 },
+            { name: "NAUTICAL CUTIES", start: 82, end: 90 },
+            { name: "SPACE FRIENDS", start: 91, end: 99 },
+            { name: "GOLDEN GLITTER FRIENDS", start: 100, end: 108 },
+            { name: "PLAY TOGETHER", start: 109, end: 117 },
+            { name: "KAWAI GASHAPON", start: 118, end: 126 },
+            { name: "POP PARTY", start: 127, end: 135 },
+            { name: "BALLOON PARADE", start: 136, end: 144 },
+            { name: "BABIES", start: 145, end: 153 },
+            { name: "MY FAVOURITE DAY", start: 154, end: 162 },
+            { name: "MAKE-UP", start: 163, end: 171 },
+            { name: "UNICORN DREAMS", start: 172, end: 180 },
+            { name: "COTTON CANDY CREW 🍭", start: 181, end: 209 }, 
+            { name: "FLUFFY ☁️", start: 210, end: 218 },             
+            { name: "LIMITADA ✨", start: 219, end: 227 }            
+        ];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSavedData();
+            initTheme();
+            buildFilterButtons();
+            renderGrid();
+            updateDashboard();
+            calculateDays();
+        });
+
+        function loadSavedData() {
+            const savedData = localStorage.getItem('hk_text_album_v8');
+            const savedDate = localStorage.getItem('hk_text_date_v8');
+            if (savedData) { collectionData = JSON.parse(savedData); } else { generateInitialDatabase(); }
+            if (savedDate) { startDate = savedDate; } else { startDate = new Date().toISOString(); localStorage.setItem('hk_text_date_v8', startDate); }
+        }
+
+        function generateInitialDatabase() {
+            collectionData = [];
+            for (let i = 1; i <= BASE_TOTAL; i++) {
+                let foundCategory = COLLECTIONS.find(col => i >= col.start && i <= col.end);
+                let categoryName = foundCategory ? foundCategory.name : "Otros";
+                collectionData.push({ id: i, name: i.toString(), type: categoryName, obtained: false, copies: 0 });
+            }
+            saveToStorage();
+        }
+
+        function saveToStorage() { localStorage.setItem('hk_text_album_v8', JSON.stringify(collectionData)); }
+
+        function buildFilterButtons() {
+            const container = document.getElementById('filter-container');
+            container.innerHTML = `
+                <button class="filter-btn active" onclick="setFilter('all', this)">Todas</button>
+                <button class="filter-btn" onclick="setFilter('obtained', this)">Obtenidas</button>
+                <button class="filter-btn" onclick="setFilter('missing', this)">Faltantes</button>
+                <button class="filter-btn" onclick="setFilter('repeated', this)">Repetidas</button>
+            `;
+            COLLECTIONS.forEach(col => {
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn'; btn.innerText = col.name;
+                btn.onclick = () => setFilter(col.name, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        function calculateDays() {
+            const diffDays = Math.floor(Math.abs(new Date() - new Date(startDate)) / (1000 * 60 * 60 * 24));
+            document.getElementById('days-counter').innerText = diffDays === 0 ? "¡Tu aventura clásica empezó hoy! 🎀" : `Llevas ${diffDays} días coleccionando 🎀`;
+        }
+
+        function addNewExtraCard() {
+            const input = document.getElementById('extra-card-name'); const name = input.value.trim(); if (!name) return;
+            const exists = collectionData.some(c => c.name.toLowerCase() === name.toLowerCase()); if (exists) { alert("Esa carta ya existe."); return; }
+            const nextId = collectionData.length > 0 ? Math.max(...collectionData.map(c => c.id)) + 1 : 1;
+            collectionData.push({ id: nextId, name: name, type: 'EXTRA ➕', obtained: false, copies: 0 });
+            saveToStorage(); input.value = ''; renderGrid(); updateDashboard();
+            alert(`¡Carta "${name}" agregada a Extras!`);
+        }
+
+        function handleCardClick(id) {
+            const idx = collectionData.findIndex(c => c.id === id);
+            if (idx !== -1) {
+                if (!collectionData[idx].obtained) { collectionData[idx].obtained = true; collectionData[idx].copies = 0; } 
+                else { collectionData[idx].copies += 1; }
+                saveToStorage(); renderGrid(); updateDashboard();
+            }
+        }
+
+        function handleCardLongPress(id, event) {
+            if(event) { event.preventDefault(); event.stopPropagation(); }
+            const idx = collectionData.findIndex(c => c.id === id);
+            if (idx !== -1) { collectionData[idx].obtained = false; collectionData[idx].copies = 0; saveToStorage(); renderGrid(); updateDashboard(); }
+            return false;
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById('cards-grid'); grid.innerHTML = '';
+            const query = document.getElementById('search-input').value.toLowerCase().trim();
+
+            collectionData.forEach(card => {
+                if (query && !card.name.toLowerCase().includes(query) && !card.type.toLowerCase().includes(query)) return;
+                if (currentFilter === 'obtained' && !card.obtained) return;
+                if (currentFilter === 'missing' && card.obtained) return;
+                if (currentFilter === 'repeated' && card.copies === 0) return;
+                if (!['all', 'obtained', 'missing', 'repeated'].includes(currentFilter) && card.type !== currentFilter) return;
+
+                const cardEl = document.createElement('div'); cardEl.className = 'card';
+                if (card.obtained) cardEl.classList.add('obtained');
+                if (card.copies > 0) cardEl.classList.add('repeated');
+
+                cardEl.onclick = (e) => { e.preventDefault(); handleCardClick(card.id); };
+                cardEl.oncontextmenu = (e) => { e.preventDefault(); handleCardLongPress(card.id, e); return false; };
+
+                let pressTimer;
+                cardEl.addEventListener('touchstart', (e) => { pressTimer = setTimeout(() => { handleCardLongPress(card.id, e); }, 500); }, {passive: true});
+                cardEl.addEventListener('touchend', () => clearTimeout(pressTimer));
+                cardEl.addEventListener('touchmove', () => clearTimeout(pressTimer));
+
+                let repBadge = card.copies > 0 ? `<span class="card-rep-badge">+${card.copies}</span>` : '';
+
+                // El diseño ahora muestra el número grande y el nombre de la colección en vez de foto
+                cardEl.innerHTML = `
+                    <div class="card-num-row">
+                        <span class="card-num">#${card.name}</span>
+                        ${repBadge}
+                    </div>
+                    <span class="card-collection-title">${card.type}</span>
+                `;
+                grid.appendChild(cardEl);
+            });
+        }
+
+        document.getElementById('search-input').addEventListener('input', renderGrid);
+
+        function updateDashboard() {
+            const total = collectionData.length; const obtained = collectionData.filter(c => c.obtained).length;
+            const missing = total - obtained; const repeated = collectionData.reduce((acc, c) => acc + c.copies, 0);
+            const percent = total > 0 ? Math.round((obtained / total) * 100) : 0;
+
+            document.getElementById('stat-total').innerText = total; document.getElementById('stat-obtained').innerText = obtained;
+            document.getElementById('stat-missing').innerText = missing; document.getElementById('stat-repeated').innerText = repeated;
+            document.getElementById('stat-percent').innerText = `${percent}%`;
+            document.getElementById('progress-bar').style.width = `${percent}%`; document.getElementById('progress-text').innerText = `${percent}% Completado`;
+
+            if (obtained === total && total > 0 && localStorage.getItem('hk_text_cel_v8') !== 'true') {
+                document.getElementById('celebration').classList.add('active'); localStorage.setItem('hk_text_cel_v8', 'true');
+            }
+        }
+
+        function switchView(view, btn) {
+            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active-view'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.getElementById(`view-${view}`).classList.add('active-view'); btn.classList.add('active');
+            if(view === 'trade') updateTradeSection();
+            window.scrollTo(0,0);
+        }
+
+        function setFilter(type, btn) {
+            currentFilter = type; document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active'); renderGrid();
+        }
+
+        function updateTradeSection() {
+            // 1. Repetidas
+            const txtRep = document.getElementById('trade-text'); const repeatedCards = collectionData.filter(c => c.copies > 0);
+            if (repeatedCards.length === 0) { txtRep.value = "No tienes cartas repetidas registradas aún."; } 
+            else {
+                let outRep = "¡Hola! Tengo estas cartas repetidas de Hello Kitty para intercambiar:\n\n";
+                repeatedCards.forEach(c => { outRep += `• Carta #${c.name} [${c.type}] -> (${c.copies} repetidas)\n`; });
+                txtRep.value = outRep;
+            }
+
+            // 2. Faltantes
+            const txtMiss = document.getElementById('missing-text'); const missingCards = collectionData.filter(c => !c.obtained);
+            if (missingCards.length === 0) { txtMiss.value = "¡Increíble! No te falta ninguna carta, ¡álbum completo! 🎉"; } 
+            else {
+                let outMiss = "¡Hola! Estas son las cartas que me FALTAN para completar mi álbum de Hello Kitty:\n\n";
+                missingCards.forEach(c => { outMiss += `• Carta #${c.name} [${c.type}]\n`; });
+                txtMiss.value = outMiss;
+            }
+        }
+
+        function copyTradeList() {
+            const txt = document.getElementById('trade-text'); if (collectionData.filter(c => c.copies > 0).length === 0) return;
+            txt.select(); navigator.clipboard.writeText(txt.value); alert("¡Lista de repetidas copiada para WhatsApp! 🎀");
+        }
+
+        function copyMissingList() {
+            const txt = document.getElementById('missing-text'); if (collectionData.filter(c => !c.obtained).length === 0) return;
+            txt.select(); navigator.clipboard.writeText(txt.value); alert("¡Lista de faltantes copiada para WhatsApp! 🔍");
+        }
+
+        function exportCollection() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ version: "8.0", startDate: startDate, cards: collectionData }));
+            const dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", "kitty_album_v8_backup.json");
+            document.body.appendChild(dl); dl.click(); dl.remove();
+        }
+
+        function triggerImport() { document.getElementById('file-input').click(); }
+
+        function importCollection(e) {
+            const file = e.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const parsed = JSON.parse(evt.target.result);
+                    if (parsed && Array.isArray(parsed.cards)) {
+                        collectionData = parsed.cards; if(parsed.startDate) startDate = parsed.startDate;
+                        saveToStorage(); renderGrid(); updateDashboard(); calculateDays();
+                        alert("¡Colección restaurada! ✨");
+                    }
+                } catch (err) { alert("Error al leer el archivo."); }
+            };
+            reader.readAsText(file);
+        }
+
+        function resetCollection() {
+            if (confirm("¿Vaciar el álbum por completo?") && confirm("Esto borrará tus estampas marcadas de todas las colecciones. ¿Confirmar?")) {
+                localStorage.removeItem('hk_text_cel_v8');
+                startDate = new Date().toISOString(); localStorage.setItem('hk_text_date_v8', startDate);
+                generateInitialDatabase(); renderGrid(); updateDashboard(); calculateDays();
+                alert("Álbum limpio.");
+            }
+        }
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('hk_theme_fast');
+            const isDark = savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            document.getElementById('theme-toggle').checked = isDark;
+        }
+
+        function toggleTheme() {
+            const isDark = document.getElementById('theme-toggle').checked;
+            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            localStorage.setItem('hk_theme_fast', isDark ? 'dark' : 'light');
+        }
+    </script>
+</body>
+</html>
