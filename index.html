@@ -318,10 +318,35 @@
             calculateDays();
         });
 
+        // 🎀 BOTÓN DE RESCATE AUTOMÁTICO INTEGRADO AQUÍ
         function loadSavedData() {
-            const savedData = localStorage.getItem('hk_ultra_album_v10');
-            const savedDate = localStorage.getItem('hk_ultra_date_v10');
-            if (savedData) { collectionData = JSON.parse(savedData); } else { generateInitialDatabase(); }
+            const savedDataNew = localStorage.getItem('hk_ultra_album_v10');
+            const savedDataOld = localStorage.getItem('hk_fast_cards_v4') || localStorage.getItem('hk_photo_album_v6') || localStorage.getItem('hk_bow_album_v9');
+            const savedDate = localStorage.getItem('hk_ultra_date_v10') || localStorage.getItem('hk_photo_date_v5') || localStorage.getItem('hk_bow_date_v9');
+            
+            if (savedDataNew) {
+                // Si ya existe en la v10, cargamos normal
+                collectionData = JSON.parse(savedDataNew);
+            } else if (savedDataOld) {
+                // 🚀 PARCHE DE MIGRACIÓN: Si no hay v10 pero sí hay datos antiguos, los rescatamos
+                let oldProgress = JSON.parse(savedDataOld);
+                generateInitialDatabase(); // Crea la base limpia de 227 cartas
+                
+                // Mapeamos lo que el usuario ya tenía marcado al nuevo formato
+                oldProgress.forEach(oldCard => {
+                    let newIdx = collectionData.findIndex(c => c.name === oldCard.name);
+                    if(newIdx !== -1) {
+                        collectionData[newIdx].obtained = oldCard.obtained || false;
+                        collectionData[newIdx].copies = oldCard.copies || 0;
+                    }
+                });
+                saveToStorage(); // Guardamos inmediatamente en la v10 para consolidar
+                console.log("¡Progreso de usuario rescatado con éxito!");
+            } else {
+                // Si es un usuario completamente nuevo sin historial
+                generateInitialDatabase();
+            }
+            
             if (savedDate) { startDate = savedDate; } else { startDate = new Date().toISOString(); localStorage.setItem('hk_ultra_date_v10', startDate); }
         }
 
@@ -332,14 +357,12 @@
                 let categoryName = foundCategory ? foundCategory.name : "Otros";
                 collectionData.push({ id: i, name: i.toString(), type: categoryName, obtained: false, copies: 0 });
             }
-            saveToStorage();
         }
 
         function saveToStorage() { localStorage.setItem('hk_ultra_album_v10', JSON.stringify(collectionData)); }
 
         function buildFilterButtons() {
             const container = document.getElementById('filter-container');
-            
             const countAll = collectionData.length;
             const countObt = collectionData.filter(c => c.obtained).length;
             const countMiss = countAll - countObt;
@@ -383,7 +406,6 @@
             recentChanges = recentChanges.filter(name => name !== cardName);
             recentChanges.unshift(cardName);
             if(recentChanges.length > 3) recentChanges.pop();
-            
             const container = document.getElementById('recent-box');
             if(recentChanges.length === 0) {
                 container.innerHTML = `<span>Cambios recientes:</span> <span style="font-style: italic;">Ninguno aún</span>`;
@@ -532,7 +554,7 @@
             if (filteredMissing.length === 0) { 
                 txtMiss.value = `¡Genial! No te falta ninguna carta de este bloque [${labelContext}]. 🎉`; 
             } else {
-                let outMiss = `¡Hola! Estas son las cartas que me FALTAN de la [${labelContext}] para completar mi álbum de Hello Kitty:\n\n`;
+                let outMiss = `¡Hola! Estas son las cartas que me FALTAN de la [${labelContext}] para completar mi álbum de Hello Kitty:\n\n";
                 filteredMissing.forEach(c => { outMiss += `• Carta #${c.name} [${c.type}]\n`; });
                 txtMiss.value = outMiss;
             }
@@ -554,6 +576,7 @@
             document.body.appendChild(dl); dl.click(); dl.remove();
         }
 
+        document.getElementById('file-input').addEventListener('change', importCollection);
         function triggerImport() { document.getElementById('file-input').click(); }
 
         function importCollection(e) {
